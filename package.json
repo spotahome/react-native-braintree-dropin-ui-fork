@@ -2,7 +2,6 @@
   "name": "@spotahome/react-native-braintree-dropin-ui",
   "version": "1.2.0",
   "description": "> React Native integration of Braintree Drop-in IOS V4 ANDROID V2 (Apple Pay &Android Pay Enabled)",
-  "private": true,
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {},
