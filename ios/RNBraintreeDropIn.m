@@ -57,7 +57,7 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
 
         BTThreeDSecureRequest *threeDSecureRequest = [[BTThreeDSecureRequest alloc] init];
         threeDSecureRequest.amount = [NSDecimalNumber decimalNumberWithString:threeDSecureAmount.stringValue];
-        threeDSecureRequest.versionRequested = .version2
+        threeDSecureRequest.versionRequested = .version2;
 
         NSDictionary* threeDSecureBillingAddress = threeDSecureOptions[@"billingAddress"];
         if(threeDSecureBillingAddress){
