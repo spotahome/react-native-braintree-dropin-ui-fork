@@ -72,7 +72,7 @@ public class RNBraintreeDropInModule extends ReactContextBaseJavaModule {
       dropInRequest.setVaultManagerEnabled(options.getBoolean("vaultManager"));
     }
 
-    if(options.haskey("vaultCardDefaultValue")) {
+    if(options.hasKey("vaultCardDefaultValue")) {
       dropInRequest.setVaultCardDefaultValue(options.getBoolean("vaultCardDefaultValue"));
     }
 
