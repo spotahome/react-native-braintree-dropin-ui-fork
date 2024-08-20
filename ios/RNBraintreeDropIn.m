@@ -1,6 +1,7 @@
 #import "RNBraintreeDropIn.h"
 #import <React/RCTUtils.h>
 #import "BTThreeDSecureRequest.h"
+#import "BTThreeDSecurePostalAddress.h"
 
 @implementation RNBraintreeDropIn
 
@@ -56,6 +57,42 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
 
         BTThreeDSecureRequest *threeDSecureRequest = [[BTThreeDSecureRequest alloc] init];
         threeDSecureRequest.amount = [NSDecimalNumber decimalNumberWithString:threeDSecureAmount.stringValue];
+        threeDSecureRequest.versionRequested = .version2
+
+        NSDictionary* threeDSecureBillingAddress = threeDSecureOptions[@"billingAddress"];
+        if(threeDSecureBillingAddress){
+            BTThreeDSecurePostalAddress *billingAddress = [BTThreeDSecurePostalAddress new];
+
+            if(threeDSecureBillingAddress[@"givenName"]){
+                billingAddress.givenName = threeDSecureBillingAddress[@"givenName"];
+            }
+            if(threeDSecureBillingAddress[@"surname"]){
+                billingAddress.surname = threeDSecureBillingAddress[@"surname"];
+            }
+            if(threeDSecureBillingAddress[@"streetAddress"]){
+                billingAddress.streetAddress = threeDSecureBillingAddress[@"streetAddress"];
+            }
+            if(threeDSecureBillingAddress[@"extendedAddress"]){
+                billingAddress.extendedAddress = threeDSecureBillingAddress[@"extendedAddress"];
+            }
+            if(threeDSecureBillingAddress[@"locality"]){
+                billingAddress.locality = threeDSecureBillingAddress[@"locality"];
+            }
+            if(threeDSecureBillingAddress[@"region"]){
+                billingAddress.region = threeDSecureBillingAddress[@"region"];
+            }
+            if(threeDSecureBillingAddress[@"countryCodeAlpha2"]){
+                billingAddress.countryCodeAlpha2 = threeDSecureBillingAddress[@"countryCodeAlpha2"];
+            }
+            if(threeDSecureBillingAddress[@"postalCode"]){
+                billingAddress.postalCode = threeDSecureBillingAddress[@"postalCode"];
+            }
+            if(threeDSecureBillingAddress[@"phoneNumber"]){
+                billingAddress.phoneNumber = threeDSecureBillingAddress[@"phoneNumber"];
+            }
+            threeDSecureRequest.billingAddress = billingAddress;
+        }
+
         request.threeDSecureRequest = threeDSecureRequest;
 
     }
@@ -69,6 +106,10 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
 
     if([options[@"vaultManager"] boolValue]){
         request.vaultManager = YES;
+    }
+
+    if([options[@"vaultCardDefaultValue"] boolValue]){
+        request.vaultCardDefaultValue = YES;
     }
 
     if([options[@"cardDisabled"] boolValue]){
