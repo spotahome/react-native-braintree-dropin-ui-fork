@@ -108,9 +108,10 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
         request.vaultManager = YES;
     }
 
-    if([options[@"vaultCardDefaultValue"] boolValue]){
-        request.vaultCardDefaultValue = YES;
+    if (![options[@"vaultCardDefaultValue"] boolValue]) {
+        request.vaultCard = NO;
     }
+
 
     if([options[@"cardDisabled"] boolValue]){
         request.cardDisabled = YES;
