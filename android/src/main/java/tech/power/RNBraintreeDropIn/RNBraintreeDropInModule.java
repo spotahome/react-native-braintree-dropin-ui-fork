@@ -25,6 +25,7 @@ import com.braintreepayments.api.DropInResult;
 import com.braintreepayments.api.PaymentMethodNonce;
 import com.braintreepayments.api.CardNonce;
 import com.braintreepayments.api.ThreeDSecureInfo;
+import com.braintreepayments.api.ThreeDSecurePostalAddress;
 import com.braintreepayments.api.GooglePayRequest;
 import com.google.android.gms.wallet.TransactionInfo;
 import com.google.android.gms.wallet.WalletConstants;
@@ -71,6 +72,10 @@ public class RNBraintreeDropInModule extends ReactContextBaseJavaModule {
       dropInRequest.setVaultManagerEnabled(options.getBoolean("vaultManager"));
     }
 
+    if(options.hasKey("vaultCardDefaultValue")) {
+      dropInRequest.setVaultCardDefaultValue(options.getBoolean("vaultCardDefaultValue"));
+    }
+
     if(options.hasKey("googlePay") && options.getBoolean("googlePay")){
       GooglePayRequest googlePayRequest = new GooglePayRequest();
       googlePayRequest.setTransactionInfo(TransactionInfo.newBuilder()
@@ -99,9 +104,52 @@ public class RNBraintreeDropInModule extends ReactContextBaseJavaModule {
       }
 
       isVerifyingThreeDSecure = true;
-
       ThreeDSecureRequest threeDSecureRequest = new ThreeDSecureRequest();
       threeDSecureRequest.setAmount(threeDSecureOptions.getString("amount"));
+      threeDSecureRequest.setVersionRequested(ThreeDSecureRequest.VERSION_2);
+
+      if (threeDSecureOptions.hasKey("billingAddress")) {
+        final ReadableMap threeDSecureBillingAddress = threeDSecureOptions.getMap("billingAddress");
+        ThreeDSecurePostalAddress billingAddress = new ThreeDSecurePostalAddress();
+
+        if (threeDSecureBillingAddress.hasKey("givenName")) {
+          billingAddress.setGivenName(threeDSecureBillingAddress.getString("givenName"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("surname")) {
+          billingAddress.setSurname(threeDSecureBillingAddress.getString("surname"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("streetAddress")) {
+          billingAddress.setStreetAddress(threeDSecureBillingAddress.getString("streetAddress"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("extendedAddress")) {
+          billingAddress.setExtendedAddress(threeDSecureBillingAddress.getString("extendedAddress"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("locality")) {
+          billingAddress.setLocality(threeDSecureBillingAddress.getString("locality"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("region")) {
+          billingAddress.setRegion(threeDSecureBillingAddress.getString("region"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("countryCodeAlpha2")) {
+          billingAddress.setCountryCodeAlpha2(threeDSecureBillingAddress.getString("countryCodeAlpha2"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("postalCode")) {
+          billingAddress.setPostalCode(threeDSecureBillingAddress.getString("postalCode"));
+        }
+
+        if (threeDSecureBillingAddress.hasKey("phoneNumber")) {
+          billingAddress.setPhoneNumber(threeDSecureBillingAddress.getString("phoneNumber"));
+        }
+
+        threeDSecureRequest.setBillingAddress(billingAddress);
+      }
 
       dropInRequest.setThreeDSecureRequest(threeDSecureRequest);
     }
