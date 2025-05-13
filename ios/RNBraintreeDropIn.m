@@ -161,22 +161,21 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
             } else if (result.canceled) {
                 reject(@"USER_CANCELLATION", @"The user cancelled", nil);
             } else {
-                if (threeDSecureOptions && [result.paymentMethod isKindOfClass:[BTCardNonce class]]) {
-                    BTCardNonce *cardNonce = (BTCardNonce *)result.paymentMethod;
-                    if (!cardNonce.threeDSecureInfo.liabilityShiftPossible && cardNonce.threeDSecureInfo.wasVerified) {
-                        reject(@"3DSECURE_NOT_ABLE_TO_SHIFT_LIABILITY", @"3D Secure liability cannot be shifted", nil);
-                    } else if (!cardNonce.threeDSecureInfo.liabilityShifted && cardNonce.threeDSecureInfo.wasVerified) {
-                        reject(@"3DSECURE_LIABILITY_NOT_SHIFTED", @"3D Secure liability was not shifted", nil);
-                    } else{
+                if (threeDSecureOptions) {
+                    id<BTPaymentMethodNonce> paymentMethod = result.paymentMethod;
+                    if ([paymentMethod respondsToSelector:@selector(threeDSecureInfo)]) {
+                        BTThreeDSecureInfo *info = [paymentMethod performSelector:@selector(threeDSecureInfo)];
+                        if (!info.liabilityShiftPossible && info.wasVerified) {
+                            reject(@"3DSECURE_NOT_ABLE_TO_SHIFT_LIABILITY", @"3D Secure liability cannot be shifted", nil);
+                        } else if (!info.liabilityShifted && info.wasVerified) {
+                            reject(@"3DSECURE_LIABILITY_NOT_SHIFTED", @"3D Secure liability was not shifted", nil);
+                        } else {
+                            [[self class] resolvePayment:result deviceData:self.deviceDataCollector resolver:resolve];
+                        }
+                    } else {
+                        // fallback en caso de que no tenga info de 3DS
                         [[self class] resolvePayment:result deviceData:self.deviceDataCollector resolver:resolve];
                     }
-                } else if(result.paymentMethod == nil && (result.paymentMethodType == 16 || result.paymentMethodType == 17 || result.paymentMethodType == 18)){ //Apple Pay
-                    // UIViewController *ctrl = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-                    // [ctrl presentViewController:self.viewController animated:YES completion:nil];
-                    UIViewController *rootViewController = RCTPresentedViewController();
-                    [rootViewController presentViewController:self.viewController animated:YES completion:nil];
-                } else{
-                    [[self class] resolvePayment:result deviceData:self.deviceDataCollector resolver:resolve];
                 }
             }
         }];
@@ -229,7 +228,7 @@ RCT_EXPORT_METHOD(tokenizeCard:(NSString*)clientToken
     card.postalCode = postalCode;
 
     [cardClient tokenizeCard:card
-                  completion:^(BTCardNonce *tokenizedCard, NSError *error) {
+              completion:^(id<BTPaymentMethodNonce> tokenizedCard, NSError *error) {
         if (error == nil) {
             resolve(tokenizedCard.nonce);
         } else {
