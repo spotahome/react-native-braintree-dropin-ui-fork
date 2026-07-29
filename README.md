@@ -2,6 +2,89 @@
 
 > React Native integration of Braintree Drop-in for IOS & ANDROID (Apple Pay, Google Pay, Paypal, Venmo, Credit Card)
 
+---
+
+## ⚠️ 2.x — Drop-in removed on iOS
+
+**iOS no longer uses the Braintree Drop-in SDK.** Android is unchanged.
+
+### Why
+
+`BraintreeDropIn 9.14.0` (the last release, and there will be no more — Drop-in is
+deprecated) hard-pins `Braintree ~> 5.27`. Braintree 5.x contains
+`UIApplication.sharedApplication.windows` in `BTPayPalDriver.m`, deprecated as of
+iOS 15, and Braintree ships its pods with `-Wall -Werror -Wextra`. So at any iOS
+deployment target ≥ 15 — i.e. any modern React Native / Expo — the pod fails to
+compile, and the fix (Braintree 6.x) is blocked by Drop-in's own version pin.
+
+Removing Drop-in breaks that deadlock: iOS now builds against `Braintree ~> 6.32`
+(min iOS 14.0, below the 15.1 floor set by RN/Expo, so it adds no constraint).
+
+### What replaced it
+
+For PayPal, nothing UI-wise was needed. The app already asks card-vs-PayPal in its
+own UI, and Drop-in was being invoked with `cardDisabled: true`, `applePay: false`,
+`googlePay: false`, `vaultManager: false` — a sheet whose only content was a PayPal
+button, i.e. a redundant second tap. iOS now calls `BTPayPalClient` directly and lets
+PayPal's own web authentication sheet handle the rest.
+
+### API
+
+```js
+import Braintree from '@spotahome/react-native-braintree-dropin-ui';
+
+// Both platforms. iOS: native BTPayPalClient. Android: Drop-in, PayPal-only.
+const { nonce, type, description } = await Braintree.tokenizePayPal(clientToken);
+// Rejects with code `USER_CANCELLATION` if the user backs out.
+```
+
+| Method | iOS | Android |
+| --- | --- | --- |
+| `tokenizePayPal(clientToken)` | ✅ native `BTPayPalClient` | ✅ via Drop-in, PayPal-only |
+| `tokenizeCard(clientToken, cardInfo)` | ✅ `BTCardClient` (no 3DS) | ✅ |
+| `show(options)` | ❌ rejects | ✅ unchanged |
+| `fetchMostRecentPaymentMethod(token)` | ❌ removed | ✅ unchanged |
+
+`tokenizePayPal` resolves `{ nonce, type, description }`. `description` is the PayPal
+account email, matching what Drop-in returned as `paymentDescription`. It no longer
+returns `isDefault` (only meaningful for Drop-in's vault manager) or `deviceData`
+(never consumed by the app; the old implementation collected it in a race with the
+promise anyway).
+
+### Consumer migration checklist
+
+- [ ] **Cards must not route through `show()` on iOS.** It rejects. Every card path
+      has to be on Stripe before shipping this.
+- [ ] **Requires `useFrameworks` on iOS** (the module is now Swift). `tenant-expo-app`
+      already sets `expo-build-properties → ios.useFrameworks: 'static'`.
+- [ ] **Update the Expo config plugin.** `withBraintreeDropInUIIOS.js` injects
+      `#import "BraintreeCore.h"` and `BTAppContextSwitcher.setReturnURLScheme(...)`
+      into `AppDelegate`. That header does not exist in Braintree 6.x (it is Swift),
+      so the import must go. `BTPayPalClient` subclasses
+      `BTWebAuthenticationSessionClient` and uses `ASWebAuthenticationSession`, so the
+      return-URL-scheme plumbing is very likely unnecessary too — **verify on device**,
+      and if so the plugin's AppDelegate patching can be deleted outright.
+- [ ] Keep a Podfile `post_install` hook stripping `-Werror` from Braintree targets as
+      a safety net. Braintree 6.32's podspec still sets `-Wall -Werror -Wextra`; it is
+      mostly Swift so `OTHER_CFLAGS` largely does not apply, but it costs nothing.
+
+### Extending this for a custom card form
+
+`tokenizeCard` already returns a nonce from raw card details, so a React Native card
+form needs no new native code for the happy path. What it does need:
+
+1. **3D Secure.** `tokenizeCard` performs no verification, so you get no liability
+   shift. Add a method wrapping `BTThreeDSecureClient` (`Braintree/ThreeDSecure`
+   subspec) that takes the nonce plus amount and billing address, presents the
+   challenge, and maps `liabilityShifted` / `liabilityShiftPossible` to the
+   `3DSECURE_LIABILITY_NOT_SHIFTED` / `3DSECURE_NOT_ABLE_TO_SHIFT_LIABILITY` codes the
+   previous Drop-in implementation returned. Presenting the challenge needs a view
+   controller — use `RCTPresentedViewController()`.
+2. **PCI scope.** Collecting the PAN in your own UI rather than Braintree's moves you
+   toward SAQ A-EP. That is a compliance decision, not just an engineering one.
+
+---
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/wgltony/react-native-braintree-dropin-ui/master/node_modules/iphone.png" width="250">
 <img src="https://raw.githubusercontent.com/wgltony/react-native-braintree-dropin-ui/master/node_modules/android.png" width="250">

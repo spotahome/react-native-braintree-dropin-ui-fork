@@ -1,7 +1,7 @@
 {
   "name": "@spotahome/react-native-braintree-dropin-ui",
-  "version": "1.6.0",
-  "description": "> React Native integration of Braintree Drop-in IOS V4 ANDROID V2 (Apple Pay &Android Pay Enabled)",
+  "version": "2.0.0-rc.0",
+  "description": "React Native bridge for Braintree payments (PayPal + card tokenization, Braintree iOS 6.x)",
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {},
@@ -10,14 +10,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wgltony/react-native-braintree-dropin-ui.git"
+    "url": "git+https://github.com/spotahome/react-native-braintree-dropin-ui-fork.git"
   },
   "keywords": [
     "react-native",
     "braintree",
     "payments",
-    "dropin",
-    "drop-in-ui"
+    "paypal"
   ],
   "peerDependencies": {
     "react-native": "*"
@@ -25,7 +24,7 @@
   "author": "tony0130 <wgltony@hotmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wgltony/react-native-braintree-dropin-ui/issues"
+    "url": "https://github.com/spotahome/react-native-braintree-dropin-ui-fork/issues"
   },
-  "homepage": "https://github.com/wgltony/react-native-braintree-dropin-ui#readme"
+  "homepage": "https://github.com/spotahome/react-native-braintree-dropin-ui-fork#readme"
 }

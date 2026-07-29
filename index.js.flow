@@ -35,8 +35,22 @@ type ShowResult = {|
   deviceData: string,
 |};
 
+/**
+ * Result of `tokenizePayPal`. Narrower than `ShowResult`: the iOS implementation no
+ * longer collects device data, and `isDefault` was only meaningful for Drop-in's
+ * vault manager.
+ */
+type PayPalResult = {|
+  nonce: string,
+  description: string,
+  type: string,
+|};
+
 declare module.exports: {
+  tokenizePayPal: (clientToken: string) => Promise<PayPalResult>,
+  /** Android only. Rejects on iOS — the Drop-in SDK has been removed there. */
   show: (options: ShowOptions) => Promise<ShowResult>,
+  /** Android only. */
   fetchMostRecentPaymentMethod: (clientToken: string) => Promise<ShowResult>,
   tokenizeCard: (clientToken: string, cardInfo: CardInfo) => Promise<string>,
 };
